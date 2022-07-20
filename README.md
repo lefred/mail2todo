@@ -49,3 +49,12 @@ By default DEBUG mode is enabled, you can see the output using journald:
 ```
   sudo journactl -u mail2todo -f
 ```
+
+## Examples
+
+![Selection_063](https://user-images.githubusercontent.com/609675/179944345-49c9ae53-216a-4c31-a49a-97b27c9eb3bd.png)
+
+![Selection_064](https://user-images.githubusercontent.com/609675/179944412-8c07c13f-fc1f-4940-b188-9ebe6cb194d5.png)
+
+![Selection_065](https://user-images.githubusercontent.com/609675/179944484-ff0acffb-ce48-4b36-b2da-c9a0d316cbae.png)
+
