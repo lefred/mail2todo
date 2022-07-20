@@ -1,0 +1,11 @@
+[Unit]
+Description=Mail 2 Todo service
+After=network.target
+
+[Service]
+Type=simple
+User=<replace me>
+ExecStart=<path to>/mail2todo.py -c <path to>/mail2todo.conf
+
+[Install]
+WantedBy=multi-user.target
