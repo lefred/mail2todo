@@ -107,7 +107,7 @@ imap = connect_mail()
 
 while True:
 
-    if not session:
+    if not session.is_open():
         session = connect_db()
     if not imap:
         imap = connect_mail()
