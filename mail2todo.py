@@ -3,10 +3,11 @@
 ######################################################
 # Name: mail2todo.py
 #
-# Version: 0.1
+# Version: 0.2
 # Author : Frederic Descamps <lefred@lefred.be>
 #
-# Date   : 0.1  - 19 JUL 2022 | initial release
+# Date   : 0.2  - 21 SEP 2022 | fix iphone email
+#          0.1  - 19 JUL 2022 | initial release
 #
 ######################################################
 
@@ -19,6 +20,7 @@ import time
 import getopt
 import configparser
 import sys
+import html2text
 from datetime import datetime
 
 debug = False
@@ -51,6 +53,14 @@ pdebug("Config file is {}".format(config_file))
 config = configparser.ConfigParser()
 config.read(config_file)
 sections = config.sections()
+if "MySQL" in sections:
+    pdebug("Section MySQL exists")
+    if "imap" in sections:
+        pdebug("Section imap exists")
+else:
+    print("ERROR: config file is not correct")
+    sys.exit(3)
+
 
 # parsing the config file
 
@@ -135,25 +145,31 @@ while True:
             todo_title = message.get("Subject")
             pdebug("Todo Title : {}".format(todo_title))
             for part in message.walk():
-                if part.get_content_type() == "text/plain":
-                    # body_lines = part.as_string().split("\n")
-                    body_lines = part.as_string()
-                    found_encoding = False
-                    for encoding in content_encoding:
+                pdebug("Content type : {}".format(part.get_content_type()))
+                if part.get_content_type() == "text/plain" or part.get_content_type() == "text/html":
+                    if part.get_content_type() == "text/html":
+                      body_lines = html2text.html2text(part.as_string()) 
+                      encoding, body_note = body_lines.split("\n", 1)
+                      found_encoding = True
+                    else:
+                      # body_lines = part.as_string().split("\n")
+                      body_lines = part.as_string()
+                      found_encoding = False
+                      for encoding in content_encoding:
                         if (
                             body_lines.find(
                                 "Content-Transfer-Encoding: {}\n\n".format(
                                     encoding["name"]
                                 )
                             )
-                            > 1
+                           > 1
                         ):
                             if encoding["encoded"]:
                                 body_encoded = body_lines[
                                     body_lines.find(
                                         "Content-Transfer-Encoding: {}\n\n".format(
                                             encoding["name"]
-                                        )
+                                       )
                                     )
                                     + (29 + len(encoding["name"])) :
                                 ]
@@ -202,6 +218,8 @@ while True:
                     query = "SELECT id FROM {}lists WHERE name LIKE '{}'".format(
                         db_prefix, mtt_list
                     )
+                    if not session.is_open():
+                        session = connect_db()
                     result = session.sql(query).execute().fetch_one()
                     if result:
                         mtt_list_id = result[0]
@@ -265,6 +283,7 @@ while True:
                         ", ".join(tags_id_name),
                     )
                     pdebug(query)
+                    pdebug(note)
                     result = session.sql(query).bind(note).execute()
                     task_id = result.get_autoincrement_value()
                     pdebug("Inserted Todo ID: {}".format(task_id))
